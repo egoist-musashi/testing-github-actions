@@ -1,0 +1,39 @@
+name: CI/CD Pipeline for Spring Boot Backend
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build Spring Boot
+        working-directory: ./backend
+        run: mvn clean package -DskipTests
+
+      - name: Deploy to EC2
+        env:
+          EC2_HOST: ${{ secrets.AWS_EC2_HOST }}
+          EC2_USER: ${{ secrets.AWS_EC2_USER }}
+          EC2_SSH_KEY: ${{ secrets.AWS_EC2_SSH_KEY }}
+        run: |
+          echo "$EC2_SSH_KEY" > key.pem
+          chmod 400 key.pem
+          scp -o StrictHostKeyChecking=no -i key.json backend/target/store-0.0.1-SNAPSHOT.jar $EC2_USER@$EC2_HOST:/home/$EC2_USER/app.jar
+          ssh -o StrictHostKeyChecking=no -i key.pem $EC2_USER@$EC2_HOST << 'EOF'
+            sudo pkill -f 'java -jar'
+            nohup java -jar /home/$EC2_USER/app.jar &
+          EOF
+          rm key.pem
