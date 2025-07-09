@@ -30,10 +30,12 @@ jobs:
           EC2_SSH_KEY: ${{ secrets.AWS_EC2_SSH_KEY }}
         run: |
           echo "$EC2_SSH_KEY" > key.pem
-          chmod 400 key.pem
+          chmod 600 key.pem
+          ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
           scp -o StrictHostKeyChecking=no -i key.pem target/store-0.0.1-SNAPSHOT.jar $EC2_USER@$EC2_HOST:/home/$EC2_USER/app.jar
           ssh -o StrictHostKeyChecking=no -i key.pem $EC2_USER@$EC2_HOST << 'EOF'
-            sudo pkill -f 'java -jar'
-            nohup java -jar /home/$EC2_USER/app.jar &
+            sudo systemctl stop store.service || true
+            sudo systemctl start store.service
+            sudo systemctl status store.service
           EOF
           rm key.pem
