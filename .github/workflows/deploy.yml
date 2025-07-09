@@ -20,7 +20,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Build Spring Boot
-        working-directory: ./store
+        working-directory: ./src
         run: mvn clean package -DskipTests
 
       - name: Deploy to EC2
