@@ -17,6 +17,6 @@ public class StoreApplication {
 
     @GetMapping("/hello")
     public String sayHello() {
-        return "Hello Worlds - Updated at " + new java.util.Date();
+        return "Hello new world - Updated at " + new java.util.Date();
     }
 }
